@@ -302,13 +302,7 @@ export default function Toolbar({ wells, onBulkTriageComplete }) {
 
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-      gap: 6, padding: '8px 12px',
-      borderBottom: '1px solid var(--border)',
-      background: 'var(--surface-2)',
-      flexShrink: 0,
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
       {/* Bulk Triage */}
       <button
         onClick={handleBulkTriage}
@@ -316,16 +310,17 @@ export default function Toolbar({ wells, onBulkTriageComplete }) {
         title={`Run Gemini triage on all ${critHighCount} Critical + High wells`}
         style={{
           display: 'flex', alignItems: 'center', gap: 5,
-          padding: '5px 10px',
-          background: triageDone ? '#D1FAE5' : triaging ? 'var(--surface)' : '#1C2B45',
+          padding: '4px 10px',
+          background: triageDone ? '#D1FAE5' : triaging ? 'var(--surface-2)' : '#1C2B45',
           border: triageDone ? '1px solid #6EE7B7' : '1px solid transparent',
           borderRadius: 6,
           cursor: triaging || critHighCount === 0 ? 'not-allowed' : 'pointer',
           opacity: critHighCount === 0 ? 0.4 : 1,
           transition: 'all 0.2s ease',
+          height: 28,
         }}
       >
-        <span style={{ fontSize: 11 }}>{triageDone ? '✓' : triaging ? '⏳' : '⚡'}</span>
+        <span style={{ fontSize: 10 }}>{triageDone ? '✓' : triaging ? '⏳' : '⚡'}</span>
         <span style={{
           fontFamily: MONO, fontSize: 9, fontWeight: 600, letterSpacing: '0.07em',
           color: triageDone ? '#065F46' : triaging ? 'var(--text-3)' : 'white',
@@ -343,23 +338,24 @@ export default function Toolbar({ wells, onBulkTriageComplete }) {
         title="Export full well report as PDF"
         style={{
           display: 'flex', alignItems: 'center', gap: 5,
-          padding: '5px 10px',
+          padding: '4px 10px',
           background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: 6,
           cursor: exporting || wells.length === 0 ? 'not-allowed' : 'pointer',
           opacity: wells.length === 0 ? 0.4 : 1,
+          height: 28,
           transition: 'border-color 0.15s',
         }}
         onMouseOver={e => { if (!exporting) e.currentTarget.style.borderColor = '#1C2B45'; }}
         onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
       >
-        <span style={{ fontSize: 11 }}>📄</span>
+        <span style={{ fontSize: 10 }}>📄</span>
         <span style={{
           fontFamily: MONO, fontSize: 9, fontWeight: 600, letterSpacing: '0.07em',
           color: 'var(--text-2)', whiteSpace: 'nowrap',
         }}>
-          {exporting ? 'EXPORTING…' : 'EXPORT PDF'}
+          {exporting ? 'EXPORTING…' : 'PDF'}
         </span>
       </button>
     </div>

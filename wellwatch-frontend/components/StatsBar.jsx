@@ -2,6 +2,7 @@
 
 
 import Logo from '@/components/Logo';
+import Toolbar from '@/components/Toolbar';
 
 
 const MONO = 'var(--font-mono)';
@@ -42,7 +43,7 @@ function Stat({ label, value, color, pulse }) {
 }
 
 
-export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) {
+export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, wells, onBulkTriageComplete }) {
   const avgRisk = stats?.avg_risk_score != null
     ? stats.avg_risk_score.toFixed(1)
     : null;
@@ -123,6 +124,12 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         value={methanePpm}
         color="var(--text-2)"
       />
+
+
+      <Divider />
+
+
+      <Toolbar wells={wells || []} onBulkTriageComplete={onBulkTriageComplete} />
 
 
       {/* Live indicator */}

@@ -8,9 +8,9 @@
 
 
   /* Neutrals */
-  --bg:          #F4F6F9;
-  --surface:     #FFFFFF;
-  --surface-2:   #F8FAFC;
+  --bg:          #E8EAEE;
+  --surface:     #EDEEF2;
+  --surface-2:   #E2E4E8;
   --border:      #E2E8F0;
   --border-soft: #EFF2F7;
   --text-1:      #0F172A;
@@ -107,3 +107,6 @@ input, select      { font-family: inherit; }
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+
+
+

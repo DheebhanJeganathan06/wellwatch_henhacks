@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import StatsBar from '@/components/StatsBar';
 import WellPanel from '@/components/WellPanel';
 import AlertsList from '@/components/AlertsList';
-import Toolbar from '@/components/Toolbar';
 import { fetchWellsMap, fetchStats, fetchAlerts } from '@/lib/api';
 
 const WellMap = dynamic(() => import('@/components/WellMap'), {
@@ -75,7 +74,7 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <StatsBar stats={stats} alertCount={alerts.length} wellCount={wells.length} lastUpdated={lastUpdated} />
+      <StatsBar stats={stats} alertCount={alerts.length} wellCount={wells.length} lastUpdated={lastUpdated} wells={wells} onBulkTriageComplete={handleBulkTriageComplete} />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
 
@@ -107,10 +106,7 @@ export default function HomePage() {
           {selectedWell ? (
             <WellPanel well={selectedWell} onClose={handlePanelClose} onTriageComplete={handleTriageComplete} />
           ) : (
-            <>
-              <Toolbar wells={wells} onBulkTriageComplete={handleBulkTriageComplete} />
-              <AlertsList alerts={alerts} wells={wells} onWellClick={handleWellClick} />
-            </>
+            <AlertsList alerts={alerts} wells={wells} onWellClick={handleWellClick} />
           )}
         </div>
       </div>
