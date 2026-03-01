@@ -1,13 +1,12 @@
 'use client';
 
+import Logo from '@/components/Logo';
 
 const MONO = 'var(--font-mono)';
-
 
 function Divider() {
   return <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />;
 }
-
 
 function Stat({ label, value, color, pulse }) {
   return (
@@ -38,17 +37,14 @@ function Stat({ label, value, color, pulse }) {
   );
 }
 
-
 export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) {
   const avgRisk = stats?.avg_risk_score != null
     ? stats.avg_risk_score.toFixed(1)
     : null;
 
-
   const methanePpm = stats?.total_methane_debt_ppm != null
     ? (stats.total_methane_debt_ppm / 1000).toFixed(1) + 'k'
     : null;
-
 
   return (
     <header style={{
@@ -66,25 +62,15 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
       flexShrink: 0,
     }}>
 
-
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="13" stroke="var(--green)" strokeWidth="1.5" />
-          <circle cx="14" cy="14" r="5" fill="var(--green)" />
-          <circle cx="14" cy="14" r="9" stroke="var(--green)" strokeWidth="0.75" opacity="0.4" />
-        </svg>
-        <span style={{
-          fontFamily: MONO, fontSize: 14, fontWeight: 500,
-          letterSpacing: '0.15em', color: 'var(--text-1)',
-        }}>
-          WELL<span style={{ color: 'var(--green)' }}>WATCH</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
+        <Logo size={32} />
+        <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 500, letterSpacing: '0.15em', color: '#1C2B45' }}>
+          WELL<span style={{ color: '#1A9E6B' }}>WATCH</span>
         </span>
       </div>
 
-
       <Divider />
-
 
       <Stat
         label="Wells Monitored"
@@ -93,9 +79,7 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         pulse
       />
 
-
       <Divider />
-
 
       <Stat
         label="Active Alerts"
@@ -104,9 +88,7 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         pulse={alertCount > 0}
       />
 
-
       <Divider />
-
 
       <Stat
         label="Avg Risk Score"
@@ -118,9 +100,7 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         }
       />
 
-
       <Divider />
-
 
       <Stat
         label="CH₄ Debt · ppm above ambient"
@@ -128,18 +108,11 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         color="var(--text-2)"
       />
 
-
       {/* Live indicator */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: 'var(--green)',
-          animation: 'blink 2.4s ease infinite',
-        }} />
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1A9E6B', animation: 'blink 2.4s ease infinite' }} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--green)', letterSpacing: '0.08em' }}>
-            LIVE · PA-DEP
-          </span>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: '#1A9E6B', letterSpacing: '0.08em' }}>LIVE · PA-DEP</span>
           {lastUpdated && (
             <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--text-3)', letterSpacing: '0.05em' }}>
               updated {lastUpdated.toLocaleTimeString()}
@@ -150,6 +123,5 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
     </header>
   );
 }
-
 
 
