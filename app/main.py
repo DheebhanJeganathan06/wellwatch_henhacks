@@ -3,28 +3,34 @@ main.py
 WellWatch FastAPI application.
 
 Endpoints:
-    GET  /health              — liveness check
-    GET  /wells               — list all wells
-    GET  /wells/{api_number}  — single well detail
-    POST /triage/{api_number} — run Gemini AI triage on a well
-    GET  /alerts              — wells with risk_score >= 80
-    GET  /dashboard/stats     — aggregate dashboard numbers
+    GET  /health                        — liveness check
+    GET  /wells/map                     — all wells + latest triage for map layer  ← NEW
+    GET  /wells                         — list all wells (metadata only)
+    GET  /wells/{api_number}            — single well detail
+    GET  /wells/{api_number}/readings   — recent sensor readings for charts        ← NEW
+    POST /triage/{api_number}           — run Gemini AI triage on a well
+    GET  /alerts                        — wells with risk_score >= 80
+    GET  /dashboard/stats               — aggregate dashboard numbers
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime, date
 
-from models import WellOut, TriageOut, AlertOut, DashboardStats
+from models import WellOut, TriageOut, AlertOut, DashboardStats, SensorReadingOut
 from db import fetch_dicts
 from triage_orchestrator import run_triage
 
 app = FastAPI(
     title="WellWatch API",
     description="Methane leak detection and AI triage for abandoned oil & gas wells.",
-    version="0.1.0",
+    version="0.2.0",
 )
 
-# Allow frontend (Mapbox/React) to call the API from any origin during dev
+# Allow the Next.js dev server and any production domain to call the API.
+# In production, replace ["*"] with your actual frontend origin.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,6 +46,91 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  MAP ENDPOINT  (must be declared before /wells/{api_number})
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class WellMapItem(BaseModel):
+    """Well record enriched with its latest triage result — used by the map layer."""
+    api_number: str
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    well_name: Optional[str] = None
+    county: Optional[str] = None
+    state: Optional[str] = None
+    well_status: Optional[str] = None
+    well_type: Optional[str] = None
+    formation: Optional[str] = None
+    depth_ft: Optional[float] = None
+    plug_date: Optional[date] = None
+    spud_date: Optional[date] = None
+    operator_last: Optional[str] = None
+    # Triage fields (None if no triage has been run yet)
+    risk_score: Optional[float] = None
+    risk_category: Optional[str] = None
+    gemini_reasoning: Optional[str] = None
+    recommended_action: Optional[str] = None
+    crew_size_needed: Optional[int] = None
+    estimated_repair_hrs: Optional[float] = None
+    satellite_confirmed: Optional[bool] = None
+    emit_ppb: Optional[float] = None
+    triage_ts: Optional[datetime] = None
+
+
+@app.get("/wells/map", response_model=list[WellMapItem])
+def get_wells_map():
+    """
+    Return every well that has coordinates, joined with its most recent triage
+    result (LEFT JOIN — wells without triage are included with null risk fields).
+
+    This single call replaces separate /wells + /triage fetches on the frontend,
+    which would create an N+1 query problem for 1000 wells.
+
+    Sorted high-risk first so the frontend can skip sorting.
+    """
+    rows = fetch_dicts(
+        """
+        SELECT
+            w.API_NUMBER,
+            w.LAT,
+            w.LON,
+            w.WELL_NAME,
+            w.COUNTY,
+            w.STATE,
+            w.WELL_STATUS,
+            w.WELL_TYPE,
+            w.FORMATION,
+            w.DEPTH_FT,
+            w.PLUG_DATE,
+            w.SPUD_DATE,
+            w.OPERATOR_LAST,
+            t.RISK_SCORE,
+            t.RISK_CATEGORY,
+            t.GEMINI_REASONING,
+            t.RECOMMENDED_ACTION,
+            t.CREW_SIZE_NEEDED,
+            t.ESTIMATED_REPAIR_HRS,
+            t.SATELLITE_CONFIRMED,
+            t.EMIT_PPB,
+            t.TS AS TRIAGE_TS
+        FROM WELLS w
+        LEFT JOIN (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY API_NUMBER
+                    ORDER BY TS DESC
+                ) AS rn
+            FROM AI_TRIAGE_RESULTS
+        ) t ON t.API_NUMBER = w.API_NUMBER AND t.rn = 1
+        WHERE w.LAT IS NOT NULL
+          AND w.LON  IS NOT NULL
+        ORDER BY COALESCE(t.RISK_SCORE, 0) DESC
+        LIMIT 1000
+        """
+    )
+    return [_lower(r) for r in rows]
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -60,8 +151,36 @@ def get_wells():
         LIMIT 1000
         """
     )
-    # Lowercase the keys so Pydantic can map them
     return [_lower(r) for r in rows]
+
+
+@app.get("/wells/{api_number}/readings", response_model=list[SensorReadingOut])
+def get_well_readings(
+    api_number: str,
+    limit: int = Query(default=24, ge=1, le=200, description="Number of most-recent readings to return"),
+):
+    """
+    Return the most recent sensor readings for a well, oldest-first so the
+    frontend can pass the list directly to a time-series chart.
+
+    Dropouts are included so the chart can show signal-loss gaps.
+    """
+    rows = fetch_dicts(
+        """
+        SELECT
+            READING_ID, API_NUMBER, TS,
+            CH4_PPM, PRESSURE_PSI, TEMP_DELTA_C,
+            SUBSIDENCE_MM, SIGNAL_STRENGTH, BATTERY_PCT,
+            IS_DROPOUT, DROPOUT_REASON, DATA_QUALITY_FLAG
+        FROM SENSOR_READINGS
+        WHERE API_NUMBER = %s
+        ORDER BY TS DESC
+        LIMIT %s
+        """,
+        [api_number, limit],
+    )
+    # Reverse so the frontend receives oldest → newest (natural chart order)
+    return [_lower(r) for r in reversed(rows)]
 
 
 @app.get("/wells/{api_number}", response_model=WellOut)
@@ -196,10 +315,10 @@ def dashboard_stats():
     )
     r = _lower(rows[0])
     return {
-        "total_wells": r["total_wells"] or 0,
-        "wells_with_readings": r["wells_with_readings"] or 0,
-        "active_alerts": r["active_alerts"] or 0,
-        "avg_risk_score": r["avg_risk_score"],
+        "total_wells":          r["total_wells"] or 0,
+        "wells_with_readings":  r["wells_with_readings"] or 0,
+        "active_alerts":        r["active_alerts"] or 0,
+        "avg_risk_score":       r["avg_risk_score"],
         "total_methane_debt_ppm": r["total_methane_debt_ppm"],
     }
 

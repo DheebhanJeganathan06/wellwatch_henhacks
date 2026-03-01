@@ -1,0 +1,105 @@
+@import url('https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css');
+
+
+/* ── Design tokens ──────────────────────────────────────────────────── */
+:root {
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+
+  /* Neutrals */
+  --bg:          #F4F6F9;
+  --surface:     #FFFFFF;
+  --surface-2:   #F8FAFC;
+  --border:      #E2E8F0;
+  --border-soft: #EFF2F7;
+  --text-1:      #0F172A;
+  --text-2:      #475569;
+  --text-3:      #94A3B8;
+
+
+  /* Brand */
+  --green:       #16A34A;
+  --green-light: #DCFCE7;
+
+
+  /* Risk palette — used across map dots, badges, and panel accents */
+  --risk-critical:       #BE123C;
+  --risk-critical-light: #FFF1F2;
+  --risk-critical-border:#FECDD3;
+
+
+  --risk-high:           #C2410C;
+  --risk-high-light:     #FFF7ED;
+  --risk-high-border:    #FED7AA;
+
+
+  --risk-medium:         #A16207;
+  --risk-medium-light:   #FEFCE8;
+  --risk-medium-border:  #FEF08A;
+
+
+  --risk-low:            #15803D;
+  --risk-low-light:      #F0FDF4;
+  --risk-low-border:     #BBF7D0;
+
+
+  --risk-minimal:        #1D4ED8;
+  --risk-minimal-light:  #EFF6FF;
+  --risk-minimal-border: #BFDBFE;
+
+
+  --risk-unknown:        #64748B;
+  --risk-unknown-light:  #F8FAFC;
+  --risk-unknown-border: #CBD5E1;
+
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08);
+  --shadow-lg: 0 8px 24px rgba(15,23,42,0.10);
+
+
+  /* Sizing */
+  --header-h: 64px;
+  --panel-w:  400px;
+  --radius:   8px;
+  --radius-lg:12px;
+}
+
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #__next { height: 100%; }
+body               { font-family: var(--font-sans); background: var(--bg); color: var(--text-1); -webkit-font-smoothing: antialiased; }
+button             { font-family: inherit; cursor: pointer; border: none; background: none; }
+a                  { color: inherit; text-decoration: none; }
+input, select      { font-family: inherit; }
+
+
+/* ── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: var(--surface-2); }
+::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 4px; }
+
+
+/* ── Keyframes ──────────────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(1.6); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+
+
