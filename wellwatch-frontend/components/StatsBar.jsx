@@ -1,10 +1,13 @@
 'use client';
 
+
 const MONO = 'var(--font-mono)';
+
 
 function Divider() {
   return <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />;
 }
+
 
 function Stat({ label, value, color, pulse }) {
   return (
@@ -35,14 +38,17 @@ function Stat({ label, value, color, pulse }) {
   );
 }
 
-export default function StatsBar({ stats, alertCount, wellCount }) {
+
+export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) {
   const avgRisk = stats?.avg_risk_score != null
     ? stats.avg_risk_score.toFixed(1)
     : null;
 
+
   const methanePpm = stats?.total_methane_debt_ppm != null
     ? (stats.total_methane_debt_ppm / 1000).toFixed(1) + 'k'
     : null;
+
 
   return (
     <header style={{
@@ -60,6 +66,7 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
       flexShrink: 0,
     }}>
 
+
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -75,7 +82,9 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
         </span>
       </div>
 
+
       <Divider />
+
 
       <Stat
         label="Wells Monitored"
@@ -84,7 +93,9 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
         pulse
       />
 
+
       <Divider />
+
 
       <Stat
         label="Active Alerts"
@@ -93,7 +104,9 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
         pulse={alertCount > 0}
       />
 
+
       <Divider />
+
 
       <Stat
         label="Avg Risk Score"
@@ -105,13 +118,16 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
         }
       />
 
+
       <Divider />
+
 
       <Stat
         label="CH₄ Debt · ppm above ambient"
         value={methanePpm}
         color="var(--text-2)"
       />
+
 
       {/* Live indicator */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -120,13 +136,20 @@ export default function StatsBar({ stats, alertCount, wellCount }) {
           background: 'var(--green)',
           animation: 'blink 2.4s ease infinite',
         }} />
-        <span style={{
-          fontFamily: MONO, fontSize: 10, color: 'var(--green)',
-          letterSpacing: '0.08em',
-        }}>
-          LIVE · PA-DEP
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--green)', letterSpacing: '0.08em' }}>
+            LIVE · PA-DEP
+          </span>
+          {lastUpdated && (
+            <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--text-3)', letterSpacing: '0.05em' }}>
+              updated {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
       </div>
     </header>
   );
 }
+
+
+

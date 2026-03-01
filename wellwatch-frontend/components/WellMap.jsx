@@ -286,4 +286,3 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
 
 
 
-
