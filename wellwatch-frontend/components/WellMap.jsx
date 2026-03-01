@@ -48,7 +48,7 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
 
       const map = new ml.Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
         center: [-77.75, 41.20],
         zoom: 7.2,
         attributionControl: false,
@@ -57,6 +57,9 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
 
       map.on('load', () => {
         if (destroyed) return;
+
+
+        // Voyager style has blue water natively — no overrides needed
 
 
         // ── Add GeoJSON source (empty to start) ──
@@ -282,6 +285,7 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
     </div>
   );
 }
+
 
 
 
