@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import StatsBar from '@/components/StatsBar';
 import WellPanel from '@/components/WellPanel';
 import AlertsList from '@/components/AlertsList';
+import Toolbar from '@/components/Toolbar';
 import { fetchWellsMap, fetchStats, fetchAlerts } from '@/lib/api';
 
 const WellMap = dynamic(() => import('@/components/WellMap'), {
@@ -56,14 +57,20 @@ export default function HomePage() {
   const handleWellClick = useCallback((well) => setSelected(well), []);
   const handlePanelClose = useCallback(() => setSelected(null), []);
 
-  // When triage completes, patch just the wells array so the sidebar
-  // re-sorts the well into the correct risk group immediately.
   const handleTriageComplete = useCallback((apiNumber, result) => {
     setWells(prev => prev.map(w =>
       w.api_number === apiNumber
         ? { ...w, risk_score: result.risk_score, risk_category: result.risk_category }
         : w
     ));
+  }, []);
+
+  const handleBulkTriageComplete = useCallback((results) => {
+    setWells(prev => prev.map(w => {
+      const result = results.find(r => r.api_number === w.api_number);
+      if (!result) return w;
+      return { ...w, risk_score: result.risk_score, risk_category: result.risk_category };
+    }));
   }, []);
 
   return (
@@ -100,7 +107,10 @@ export default function HomePage() {
           {selectedWell ? (
             <WellPanel well={selectedWell} onClose={handlePanelClose} onTriageComplete={handleTriageComplete} />
           ) : (
-            <AlertsList alerts={alerts} wells={wells} onWellClick={handleWellClick} />
+            <>
+              <Toolbar wells={wells} onBulkTriageComplete={handleBulkTriageComplete} />
+              <AlertsList alerts={alerts} wells={wells} onWellClick={handleWellClick} />
+            </>
           )}
         </div>
       </div>

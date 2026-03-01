@@ -1,12 +1,16 @@
 'use client';
 
+
 import Logo from '@/components/Logo';
 
+
 const MONO = 'var(--font-mono)';
+
 
 function Divider() {
   return <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />;
 }
+
 
 function Stat({ label, value, color, pulse }) {
   return (
@@ -37,14 +41,17 @@ function Stat({ label, value, color, pulse }) {
   );
 }
 
+
 export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) {
   const avgRisk = stats?.avg_risk_score != null
     ? stats.avg_risk_score.toFixed(1)
     : null;
 
+
   const methanePpm = stats?.total_methane_debt_ppm != null
     ? (stats.total_methane_debt_ppm / 1000).toFixed(1) + 'k'
     : null;
+
 
   return (
     <header style={{
@@ -62,6 +69,7 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
       flexShrink: 0,
     }}>
 
+
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
         <Logo size={32} />
@@ -70,7 +78,9 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         </span>
       </div>
 
+
       <Divider />
+
 
       <Stat
         label="Wells Monitored"
@@ -79,7 +89,9 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         pulse
       />
 
+
       <Divider />
+
 
       <Stat
         label="Active Alerts"
@@ -88,7 +100,9 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         pulse={alertCount > 0}
       />
 
+
       <Divider />
+
 
       <Stat
         label="Avg Risk Score"
@@ -100,13 +114,16 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
         }
       />
 
+
       <Divider />
+
 
       <Stat
         label="CH₄ Debt · ppm above ambient"
         value={methanePpm}
         color="var(--text-2)"
       />
+
 
       {/* Live indicator */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -123,5 +140,6 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated }) 
     </header>
   );
 }
+
 
 

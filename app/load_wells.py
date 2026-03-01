@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from db import execute_many, fetch_dicts, get_cursor
 
 # ── HOW MANY WELLS TO LOAD (total, not per batch) ──
-MAX_WELLS = 1000
+MAX_WELLS = 200
 
 # ── Path to the GeoJSON file ──
 GEOJSON_PATH = os.path.join(
