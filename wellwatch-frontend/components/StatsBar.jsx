@@ -85,7 +85,7 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, we
       display: 'flex',
       alignItems: 'center',
       padding: '0 20px',
-      gap: 24,
+      gap: 18,
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -151,9 +151,6 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, we
         trend={deltas?.methane}
         invertTrend={true}
       />
-
-
-      <Divider />
 
 
       <Toolbar wells={wells || []} onBulkTriageComplete={onBulkTriageComplete} />

@@ -37,6 +37,16 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
   const [mapReady, setMapReady] = useState(false);
   const [tooltip, setTooltip]   = useState(null);
   const [bearing, setBearing]   = useState(0);
+  const [hiddenLevels, setHiddenLevels] = useState(new Set());
+
+
+  const toggleLevel = (level) => {
+    setHiddenLevels(prev => {
+      const next = new Set(prev);
+      next.has(level) ? next.delete(level) : next.add(level);
+      return next;
+    });
+  };
 
 
   useEffect(() => { onWellClickRef.current = onWellClick; }, [onWellClick]);
@@ -246,12 +256,13 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
 
     const features = wells
       .filter(w => w.lat != null && w.lon != null)
+      .filter(w => !hiddenLevels.has((w.risk_category ?? 'UNKNOWN').toUpperCase()))
       .map(w => ({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [w.lon, w.lat] },
         properties: {
           api_number:    w.api_number,
-          risk_category: w.risk_category || 'UNKNOWN',
+          risk_category: (w.risk_category ?? 'UNKNOWN').toUpperCase(),
           well_name:     w.well_name || w.api_number,
           selected:      selectedWell?.api_number === w.api_number,
         },
@@ -268,7 +279,7 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
       const well = wellsRef.current.find(w => w.api_number === api);
       if (well) onWellClickRef.current(well);
     });
-  }, [mapReady, wells, selectedWell]);
+  }, [mapReady, wells, selectedWell, hiddenLevels]);
 
 
   // ── Fly to selected ──────────────────────────────────────────────
@@ -299,7 +310,7 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
   };
 
 
-  const rc = tooltip ? (RISK_COLORS[tooltip.well?.risk_category] || RISK_COLORS.UNKNOWN) : null;
+  const rc = tooltip ? (RISK_COLORS[tooltip.well?.risk_category?.toUpperCase()] || RISK_COLORS.UNKNOWN) : null;
 
 
   return (
@@ -384,24 +395,76 @@ export default function WellMap({ wells, selectedWell, onWellClick }) {
       )}
 
 
-      {/* Legend */}
+      {/* Legend — clickable filters */}
       <div style={{
         position: 'absolute', top: 16, left: 16, zIndex: 20,
         background: 'rgba(255,255,255,0.96)',
         border: '1px solid #E2E8F0', borderRadius: 8,
         padding: '12px 14px',
         boxShadow: '0 4px 12px rgba(15,23,42,0.10)',
-        pointerEvents: 'none',
       }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94A3B8', marginBottom: 8 }}>
-          Risk Level
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94A3B8' }}>
+            Risk Level
+          </span>
+          {hiddenLevels.size > 0 && (
+            <button
+              onClick={() => setHiddenLevels(new Set())}
+              style={{
+                fontFamily: MONO, fontSize: 8, color: '#1A9E6B', letterSpacing: '0.06em',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                textDecoration: 'underline',
+              }}
+            >
+              show all
+            </button>
+          )}
         </div>
-        {Object.entries(RISK).filter(([k]) => k !== 'UNKNOWN').map(([cat, style]) => (
-          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: style.dot, flexShrink: 0, border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
-            <span style={{ fontFamily: MONO, fontSize: 10, color: '#475569' }}>{cat}</span>
+        {Object.entries(RISK).filter(([k]) => k !== 'UNKNOWN').map(([cat, style]) => {
+          const hidden = hiddenLevels.has(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => toggleLevel(cat)}
+              title={hidden ? `Show ${cat} wells` : `Hide ${cat} wells`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                marginBottom: 5, width: '100%', padding: '3px 4px',
+                background: hidden ? 'rgba(0,0,0,0.03)' : 'none',
+                border: '1px solid transparent',
+                borderRadius: 5, cursor: 'pointer',
+                opacity: hidden ? 0.38 : 1,
+                transition: 'opacity 0.18s, background 0.15s',
+              }}
+              onMouseOver={e => e.currentTarget.style.background = hidden ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.04)'}
+              onMouseOut={e => e.currentTarget.style.background = hidden ? 'rgba(0,0,0,0.03)' : 'none'}
+            >
+              <div style={{
+                width: 12, height: 12, borderRadius: '50%',
+                background: hidden ? '#CBD5E1' : style.dot,
+                flexShrink: 0, border: '2px solid white',
+                boxShadow: hidden ? 'none' : '0 1px 4px rgba(0,0,0,0.25)',
+                transition: 'background 0.18s',
+              }} />
+              <span style={{ fontFamily: MONO, fontSize: 10, color: hidden ? '#94A3B8' : '#475569', transition: 'color 0.18s' }}>
+                {cat}
+              </span>
+              {hidden && (
+                <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 8, color: '#CBD5E1', letterSpacing: '0.04em' }}>
+                  hidden
+                </span>
+              )}
+            </button>
+          );
+        })}
+        {hiddenLevels.size > 0 && (
+          <div style={{
+            marginTop: 6, paddingTop: 6, borderTop: '1px solid #F1F5F9',
+            fontFamily: MONO, fontSize: 8, color: '#94A3B8', letterSpacing: '0.05em', textAlign: 'center',
+          }}>
+            {wells.filter(w => w.lat && w.lon && !hiddenLevels.has((w.risk_category ?? 'UNKNOWN').toUpperCase())).length.toLocaleString()} / {wells.filter(w => w.lat && w.lon).length.toLocaleString()} shown
           </div>
-        ))}
+        )}
       </div>
 
 
