@@ -13,7 +13,28 @@ function Divider() {
 }
 
 
-function Stat({ label, value, color, pulse }) {
+// Small arrow + % change indicator
+function Trend({ delta, invert = false }) {
+  if (delta == null || Math.abs(delta) < 0.05) return null;
+  // invert = true means "up is bad" (risk score), "up is bad" (methane)
+  const up      = delta > 0;
+  const bad     = invert ? up : !up;
+  const color   = bad ? '#EF4444' : '#22C55E';
+  const arrow   = up ? '↑' : '↓';
+  const pct     = Math.abs(delta).toFixed(1);
+  return (
+    <span style={{
+      fontFamily: MONO, fontSize: 9, fontWeight: 700,
+      color, letterSpacing: '0.04em',
+      marginLeft: 4, whiteSpace: 'nowrap',
+    }}>
+      {arrow} {pct}
+    </span>
+  );
+}
+
+
+function Stat({ label, value, color, pulse, trend, invertTrend }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
       <div style={{
@@ -34,8 +55,10 @@ function Stat({ label, value, color, pulse }) {
         <div style={{
           fontFamily: MONO, fontSize: 20, fontWeight: 500,
           color: color || 'var(--text-1)', lineHeight: 1,
+          display: 'flex', alignItems: 'baseline',
         }}>
           {value ?? <span style={{ color: 'var(--text-3)', fontSize: 14 }}>—</span>}
+          {value != null && <Trend delta={trend} invert={invertTrend} />}
         </div>
       </div>
     </div>
@@ -43,7 +66,7 @@ function Stat({ label, value, color, pulse }) {
 }
 
 
-export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, wells, onBulkTriageComplete }) {
+export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, wells, onBulkTriageComplete, deltas }) {
   const avgRisk = stats?.avg_risk_score != null
     ? stats.avg_risk_score.toFixed(1)
     : null;
@@ -113,6 +136,8 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, we
           avgRisk > 50 ? 'var(--risk-high)' :
           avgRisk > 30 ? 'var(--risk-medium)' : 'var(--text-1)'
         }
+        trend={deltas?.risk}
+        invertTrend={true}
       />
 
 
@@ -123,6 +148,8 @@ export default function StatsBar({ stats, alertCount, wellCount, lastUpdated, we
         label="CH₄ Debt · ppm above ambient"
         value={methanePpm}
         color="var(--text-2)"
+        trend={deltas?.methane}
+        invertTrend={true}
       />
 
 

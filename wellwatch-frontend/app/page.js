@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import StatsBar from '@/components/StatsBar';
 import WellPanel from '@/components/WellPanel';
@@ -28,6 +28,8 @@ export default function HomePage() {
   const [loadingWells, setLoadingWells] = useState(true);
   const [error, setError]               = useState(null);
   const [lastUpdated, setLastUpdated]   = useState(null);
+  const [deltas, setDeltas]             = useState({ risk: null, methane: null });
+  const prevStatsRef                    = useRef(null);
 
   useEffect(() => {
     function fetchAll() {
@@ -37,8 +39,20 @@ export default function HomePage() {
         fetchAlerts().catch(() => null),
       ]).then(([wellData, statsData, alertData]) => {
         if (wellData)  setWells(wellData);
-        if (statsData) setStats(statsData);
         if (alertData) setAlerts(alertData);
+        if (statsData) {
+          // Compute deltas vs previous poll
+          if (prevStatsRef.current) {
+            const prev = prevStatsRef.current;
+            const riskDelta    = statsData.avg_risk_score    != null && prev.avg_risk_score    != null
+              ? statsData.avg_risk_score    - prev.avg_risk_score    : null;
+            const methaneDelta = statsData.total_methane_debt_ppm != null && prev.total_methane_debt_ppm != null
+              ? statsData.total_methane_debt_ppm - prev.total_methane_debt_ppm : null;
+            setDeltas({ risk: riskDelta, methane: methaneDelta });
+          }
+          prevStatsRef.current = statsData;
+          setStats(statsData);
+        }
         setLoadingWells(false);
         setLastUpdated(new Date());
       }).catch(err => {
@@ -47,7 +61,6 @@ export default function HomePage() {
       });
     }
 
-    // Fetch immediately on mount, then every 30 seconds
     fetchAll();
     const interval = setInterval(fetchAll, 30000);
     return () => clearInterval(interval);
@@ -74,7 +87,7 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <StatsBar stats={stats} alertCount={alerts.length} wellCount={wells.length} lastUpdated={lastUpdated} wells={wells} onBulkTriageComplete={handleBulkTriageComplete} />
+      <StatsBar stats={stats} alertCount={alerts.length} wellCount={wells.length} lastUpdated={lastUpdated} wells={wells} onBulkTriageComplete={handleBulkTriageComplete} deltas={deltas} />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
 

@@ -16,6 +16,73 @@ const RISK_STYLES = {
 };
 
 
+// Raw hex colours to match the map legend
+const RISK_HEX = {
+  CRITICAL: '#BE123C',
+  HIGH:     '#C2410C',
+  MEDIUM:   '#A16207',
+  LOW:      '#15803D',
+  MINIMAL:  '#1D4ED8',
+};
+
+
+const LEVELS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'MINIMAL'];
+
+
+function DonutChart({ wells }) {
+  const counts = LEVELS.map(l => ({ level: l, count: wells.filter(w => w.risk_category === l).length }))
+    .filter(d => d.count > 0);
+  const total = counts.reduce((s, d) => s + d.count, 0);
+  if (total === 0) return null;
+
+
+  const R = 26, cx = 30, cy = 30;
+  const circumference = 2 * Math.PI * R;
+  let offset = 0;
+  const slices = counts.map(d => {
+    const frac  = d.count / total;
+    const dash  = frac * circumference;
+    const gap   = circumference - dash;
+    const slice = { ...d, dash, gap, offset };
+    offset += dash;
+    return slice;
+  });
+
+
+  return (
+    <svg width="60" height="60" viewBox="0 0 60 60" style={{ flexShrink: 0 }}>
+      {/* Track */}
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--border)" strokeWidth="8" />
+      {/* Slices */}
+      {slices.map(s => (
+        <circle
+          key={s.level}
+          cx={cx} cy={cy} r={R}
+          fill="none"
+          stroke={RISK_HEX[s.level]}
+          strokeWidth="8"
+          strokeDasharray={`${s.dash} ${s.gap}`}
+          strokeDashoffset={-s.offset}
+          transform={`rotate(-90 ${cx} ${cy})`}
+          strokeLinecap="butt"
+        />
+      ))}
+      {/* Logo in centre — background circle + derrick SVG scaled down */}
+      <circle cx={cx} cy={cy} r="15" fill="#F0F3F8" stroke="#DDE3EE" strokeWidth="1" />
+      {/* IoT signal waves */}
+      <path d="M 23.5 24.5 Q 30 18 36.5 24.5" fill="none" stroke="#1A9E6B" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 26.5 27.5 Q 30 23 33.5 27.5" fill="none" stroke="#1A9E6B" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="30" cy="30" r="1.5" fill="#1A9E6B" />
+      {/* Derrick */}
+      <path d="M 30 31 L 23.5 45 L 36.5 45 Z" fill="none" stroke="#1C2B45" strokeWidth="2.2" strokeLinejoin="round" />
+      <line x1="27.5" y1="37" x2="32.5" y2="37" stroke="#1C2B45" strokeWidth="1.8" />
+      <line x1="25.5" y1="42" x2="34.5" y2="42" stroke="#1C2B45" strokeWidth="1.8" />
+      <line x1="21" y1="45" x2="39" y2="45" stroke="#1C2B45" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+
 function WellCard({ well, onWellClick }) {
   const r = RISK_STYLES[well.risk_category] || RISK_STYLES.MINIMAL;
   return (
@@ -127,13 +194,16 @@ export default function AlertsList({ alerts, wells, onWellClick }) {
 
 
       {/* Header */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 3 }}>Alert Inbox</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>{totalShown} wells flagged</div>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+          <DonutChart wells={wells} />
+          <div>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 3 }}>Alert Inbox</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-1)' }}>{totalShown} wells flagged</div>
+          </div>
         </div>
         {criticalWells.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--risk-critical-light)', border: '1px solid var(--risk-critical-border)', borderRadius: 20, padding: '3px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--risk-critical-light)', border: '1px solid var(--risk-critical-border)', borderRadius: 20, padding: '3px 10px', flexShrink: 0 }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--risk-critical)', animation: 'blink 1.6s infinite' }} />
             <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--risk-critical)', letterSpacing: '0.08em', fontWeight: 600 }}>LIVE</span>
           </div>
@@ -203,8 +273,6 @@ export default function AlertsList({ alerts, wells, onWellClick }) {
     </div>
   );
 }
-
-
 
 
 
