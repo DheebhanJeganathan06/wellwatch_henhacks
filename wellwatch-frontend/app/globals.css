@@ -83,6 +83,13 @@ input, select      { font-family: inherit; }
 ::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 4px; }
 
 
+/* ── Maplibre marker visibility fix ─────────────────────────────────── */
+.maplibregl-marker { z-index: 10 !important; pointer-events: all !important; }
+.maplibregl-ctrl-bottom-right { z-index: 20; }
+.maplibregl-ctrl-bottom-left  { z-index: 20; }
+.maplibregl-canvas { pointer-events: auto; }
+
+
 /* ── Keyframes ──────────────────────────────────────────────────────── */
 @keyframes pulse-ring {
   0%, 100% { opacity: 0.9; transform: scale(1); }

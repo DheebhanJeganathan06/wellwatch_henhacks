@@ -63,7 +63,7 @@ export default function HomePage() {
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', minHeight: 0 }}>
 
         {/* Map */}
-        <div style={{ flex: 1, position: 'relative', height: '100%', minHeight: 0 }}>
+        <div style={{ flex: 1, position: 'relative', height: '100%', minHeight: 0, overflow: 'hidden' }}>
           {error && (
             <div style={{
               position: 'absolute', inset: 0, display: 'flex',
